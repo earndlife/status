@@ -1,0 +1,41 @@
+{
+  "site": {
+    "name": "Earnd status",
+    "home": "https://earnd.life",
+    "contact": "hello@earnd.life",
+    "checkEveryMinutes": 30,
+    "historyDays": 90
+  },
+  "components": [
+    {
+      "id": "website",
+      "name": "earnd.life",
+      "description": "The site: home, topics, research, legal pages.",
+      "url": "https://earnd.life/",
+      "expect": [200],
+      "timeoutMs": 10000,
+      "degradedMs": 3000,
+      "enabled": true
+    },
+    {
+      "id": "website-liveness",
+      "name": "earnd.life, liveness probe",
+      "description": "The same answer the edge asks the site for every 5 seconds (/healthz).",
+      "url": "https://earnd.life/healthz",
+      "expect": [200],
+      "timeoutMs": 10000,
+      "degradedMs": 2000,
+      "enabled": true
+    },
+    {
+      "id": "waitlist",
+      "name": "Waitlist",
+      "description": "The form's backend: a Supabase function that stores sign-ups and sends the emails. Its health answer is the same one n8n polls daily.",
+      "url": "https://dfjzmcrucdvptpkslulb.supabase.co/functions/v1/waitlist",
+      "expect": [200],
+      "timeoutMs": 15000,
+      "degradedMs": 4000,
+      "enabled": true
+    }
+  ]
+}

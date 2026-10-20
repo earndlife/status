@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Earnd status</title>
+<meta name="description" content="Whether earnd.life and the Earnd waitlist are up, checked every 30 minutes from outside Earnd's own servers, with 90 days of history and every incident.">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="assets/earnd-mark-on-dark.svg" type="image/svg+xml">
+<style>
+  :root {
+    --ink: #0b0b0c; --card: #141416; --hair: #303032; --paper: #f2f2ee; --text: #b4b4b8; --muted: #8a8a90;
+    --emerald: #10b981; --amber: #f59e0b; --red: #ef4444; --slate: #3f3f46;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--ink); color: var(--text); font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  a { color: var(--paper); }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 16px 64px; }
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  header img { width: 30px; height: 36px; }
+  header .word { color: var(--paper); font-weight: 700; font-size: 20px; letter-spacing: -0.01em; }
+  header .word span { color: var(--muted); font-weight: 500; margin-left: 8px; }
+  .banner { border-radius: 16px; padding: 18px 20px; border: 1px solid var(--hair); background: var(--card); display: flex; justify-content: space-between; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .banner h1 { margin: 0; font-size: 22px; color: var(--paper); letter-spacing: -0.02em; }
+  .banner .when { color: var(--muted); font-size: 13px; }
+  .banner.up h1::before, .banner.degraded h1::before, .banner.down h1::before, .banner.unknown h1::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 10px; vertical-align: 1px; background: var(--slate); }
+  .banner.up h1::before { background: var(--emerald); }
+  .banner.degraded h1::before { background: var(--amber); }
+  .banner.down h1::before { background: var(--red); }
+  section { margin-top: 28px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 12px; font-weight: 600; }
+  .component { border: 1px solid var(--hair); background: var(--card); border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+  .name { color: var(--paper); font-weight: 600; }
+  .desc { color: var(--muted); font-size: 14px; margin-top: 2px; }
+  .pill { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--hair); white-space: nowrap; }
+  .pill.up { color: #34d399; border-color: rgba(16,185,129,.4); background: rgba(16,185,129,.1); }
+  .pill.degraded { color: #fbbf24; border-color: rgba(245,158,11,.4); background: rgba(245,158,11,.1); }
+  .pill.down { color: #f87171; border-color: rgba(239,68,68,.4); background: rgba(239,68,68,.1); }
+  .pill.disabled { color: var(--muted); }
+  .meta { color: var(--muted); font-size: 13px; margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .strip { display: grid; grid-template-columns: repeat(90, 1fr); gap: 2px; margin-top: 12px; }
+  .day { height: 22px; border-radius: 2px; background: var(--slate); }
+  .day.up { background: var(--emerald); } .day.degraded { background: var(--amber); } .day.down { background: var(--red); }
+  .legend { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-top: 6px; }
+  .incident { border-left: 2px solid var(--hair); padding: 2px 0 2px 16px; margin-bottom: 18px; }
+  .incident.open { border-left-color: var(--amber); }
+  .incident .title { color: var(--paper); font-weight: 600; }
+  .incident .when { color: var(--muted); font-size: 13px; }
+  .incident .body { white-space: pre-wrap; margin-top: 6px; font-size: 15px; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--hair); padding-top: 18px; }
+  .empty { color: var(--muted); }
+  noscript p { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="assets/earnd-mark-on-dark.svg" alt="">
+    <div class="word">Earnd <span>status</span></div>
+  </header>
+
+  <div class="banner unknown" id="banner">
+    <h1 id="headline">Checking</h1>
+    <div class="when" id="when">Loading the latest check.</div>
+  </div>
+
+  <section>
+    <h2>Components</h2>
+    <div id="components"><p class="empty">Loading.</p></div>
+  </section>
+
+  <section>
+    <h2>Incidents</h2>
+    <div id="incidents"><p class="empty">Loading.</p></div>
+  </section>
+
+  <noscript><p>This page needs JavaScript to read the latest check. The raw data is in <a href="status.json">status.json</a>, <a href="history.json">history.json</a> and <a href="incidents.json">incidents.json</a>.</p></noscript>
+
+  <footer>
+    Checked every <span id="every">30</span> minutes from GitHub's servers, not Earnd's own, so this page stays up when the site does not.
+    Degraded means slow or answering on the second try; down means no expected answer. Uptime counts degraded as up.
+    Something wrong that is not shown here? Write to <a href="mailto:hello@earnd.life">hello@earnd.life</a>.
+    <a href="https://earnd.life">earnd.life</a>
+  </footer>
+</main>
+<script>
+(async function () {
+  const DAYS = 90;
+  const fmt = (iso) => new Date(iso).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" }) + " IST";
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const words = { up: "All systems normal", degraded: "Slower than usual", down: "Something is down", unknown: "No check yet" };
+  const get = async (name) => { try { const r = await fetch(name + "?t=" + Date.now(), { cache: "no-store" }); return r.ok ? await r.json() : null; } catch { return null; } };
+
+  const [status, history, incidents] = await Promise.all([get("status.json"), get("history.json"), get("incidents.json")]);
+  const now = status && status.generatedAt ? new Date(status.generatedAt) : new Date();
+
+  const banner = document.getElementById("banner");
+  const overall = status && status.overall ? status.overall : "unknown";
+  banner.className = "banner " + overall;
+  document.getElementById("headline").textContent = words[overall] || words.unknown;
+  document.getElementById("when").textContent = status && status.generatedAt ? "Last checked " + fmt(status.generatedAt) : "The first check has not run yet.";
+  if (status && status.checkEveryMinutes) document.getElementById("every").textContent = status.checkEveryMinutes;
+
+  const dayKey = (d) => d.toISOString().slice(0, 10);
+  const days = []; for (let i = DAYS - 1; i >= 0; i--) days.push(dayKey(new Date(now.getTime() - i * 86400000)));
+  const dayState = (c) => !c || !c.checks ? "none" : c.down ? "down" : c.degraded ? "degraded" : "up";
+  const uptime = (id) => { let checks = 0, down = 0; for (const day of days) { const c = history && history.days && history.days[day] && history.days[day][id]; if (c) { checks += c.checks; down += c.down; } } return checks ? ((checks - down) / checks * 100) : null; };
+
+  const list = document.getElementById("components");
+  if (!status || !status.components || !status.components.length) {
+    list.innerHTML = '<p class="empty">No components have been checked yet.</p>';
+  } else {
+    list.innerHTML = status.components.map((c) => {
+      const up = uptime(c.id);
+      const strip = days.map((day) => '<div class="day ' + dayState(history && history.days && history.days[day] && history.days[day][c.id]) + '" title="' + day + '"></div>').join("");
+      const meta = c.state === "disabled" ? "Not live yet." : [c.httpStatus ? "HTTP " + c.httpStatus : "", c.latencyMs != null ? c.latencyMs + " ms" : "", c.error ? esc(c.error) : "", up != null ? up.toFixed(2) + "% over " + DAYS + " days" : "no history yet"].filter(Boolean).join(" · ");
+      return '<div class="component"><div class="row"><div><div class="name">' + esc(c.name) + '</div>' + (c.description ? '<div class="desc">' + esc(c.description) + '</div>' : "") + '</div><span class="pill ' + c.state + '">' + c.state + '</span></div><div class="meta">' + meta + '</div>' + (c.state === "disabled" ? "" : '<div class="strip">' + strip + '</div><div class="legend"><span>' + DAYS + ' days ago</span><span>today</span></div>') + '</div>';
+    }).join("");
+  }
+
+  const inc = document.getElementById("incidents");
+  if (!incidents || !incidents.length) {
+    inc.innerHTML = '<p class="empty">No incidents recorded.</p>';
+  } else {
+    inc.innerHTML = incidents.map((i) => '<div class="incident ' + (i.status === "resolved" ? "" : "open") + '"><div class="title">' + esc(i.title) + ' <span class="pill ' + (i.status === "resolved" ? "up" : "degraded") + '">' + esc(i.status) + '</span></div><div class="when">' + fmt(i.started) + (i.resolved ? " to " + fmt(i.resolved) : "") + (i.components.length ? " · " + esc(i.components.join(", ")) : "") + '</div><div class="body">' + esc(i.body) + '</div></div>').join("");
+  }
+})();
+</script>
+</body>
+</html>

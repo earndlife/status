@@ -1,0 +1,78 @@
+# The status page: probe, keep the history, publish to GitHub Pages. Runs in the PUBLIC
+# `earndlife/status` repository, which is this folder mirrored (status/publish.sh), so its minutes
+# are free and the page is served by GitHub, away from Earnd's own box.
+#
+# History lives on the `data` branch, one small JSON file rewritten each run, so `main` holds only
+# the page and its scripts. Pages is deployed from the artifact, never from a branch.
+name: Status
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: status
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Restore the history (the data branch)
+        run: |
+          mkdir -p data
+          if git fetch --depth=1 origin data 2>/dev/null; then
+            git show origin/data:history.json > data/history.json || echo '{"version":1,"days":{}}' > data/history.json
+          else
+            echo '{"version":1,"days":{}}' > data/history.json
+          fi
+
+      - name: Probe every component
+        run: node scripts/probe.mjs --components components.json --history data/history.json --out site
+
+      - name: Keep the history (the data branch)
+        run: |
+          git config user.name "earnd-status"
+          git config user.email "status@earnd.life"
+          if git ls-remote --exit-code --heads origin data >/dev/null 2>&1; then
+            git worktree add -q wt origin/data
+            git -C wt checkout -q -B data origin/data
+          else
+            git worktree add -q --detach wt
+            git -C wt checkout -q --orphan data
+            git -C wt rm -rfq . >/dev/null 2>&1 || true
+          fi
+          cp data/history.json wt/history.json
+          git -C wt add history.json
+          git -C wt commit -qm "history $(date -u +%FT%TZ)" || true
+          git -C wt push -q origin data
+
+      - name: Build the page
+        run: node scripts/build.mjs --root . --history data/history.json --out site
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
